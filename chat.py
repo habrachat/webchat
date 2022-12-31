@@ -73,6 +73,7 @@ def create_app(argv):
     app = web.Application()
     app.add_routes([
         web.get("/chat", http_handler),
+        web.get("/chat/", http_handler),
         web.get("/chat/ws", websocket_handler),
     ])
     return app
