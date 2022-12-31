@@ -72,8 +72,8 @@ async def websocket_handler(request):
 def create_app(argv):
     app = web.Application()
     app.add_routes([
-        web.get("/", http_handler),
-        web.get("/ws", websocket_handler),
+        web.get("/chat", http_handler),
+        web.get("/chat/ws", websocket_handler),
     ])
     return app
 
