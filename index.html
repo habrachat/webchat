@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>ssh habra.chat</title>
+		<link rel="stylesheet" type="text/css" href="https://unpkg.com/xterm@5.1.0/css/xterm.css">
+		<style type="text/css">
+			html, body, .terminal {
+				height: 100%;
+				margin: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="terminal"></div>
+
+		<script type="text/javascript" src="https://unpkg.com/xterm@5.1.0/lib/xterm.js"></script>
+		<script type="text/javascript" src="https://unpkg.com/xterm-addon-web-links@0.8.0"></script>
+		<script type="text/javascript" src="https://unpkg.com/xterm-addon-fit@0.7.0"></script>
+		<script type="text/javascript" src="https://unpkg.com/xterm-addon-canvas@0.3.0"></script>
+		<script type="text/javascript">
+			const enc = new TextEncoder();
+
+			const term = new Terminal();
+			const fitAddon = new FitAddon.FitAddon();
+			term.loadAddon(new WebLinksAddon.WebLinksAddon());
+			term.loadAddon(fitAddon);
+			term.loadAddon(new CanvasAddon.CanvasAddon());
+			term.open(document.querySelector(".terminal"));
+			fitAddon.fit();
+
+			window.onresize = () => fitAddon.fit();
+
+			let ws = null;
+
+			function connect() {
+				ws = new WebSocket(`${location.protocol.replace("http", "ws")}//${location.host}/ws`);
+				ws.onopen = () => {
+					term.clear();
+				};
+				ws.onmessage = async e => {
+					term.write(new Uint8Array(await e.data.arrayBuffer()));
+				};
+				ws.onclose = () => {
+					ws = null;
+					setTimeout(() => connect(), 1000);
+				};
+			}
+
+			connect();
+
+			term.onData(text => {
+				if(ws) {
+					ws.send(enc.encode(text.replace(/\r/g, "\r\n")));
+				}
+			});
+			term.onBinary(data => {
+				if(ws) {
+					ws.send(data);
+				}
+			});
+
+			setInterval(() => {
+				if(ws) {
+					ws.send("");
+				}
+			}, 60 * 1000);
+		</script>
+	</body>
+</html>
