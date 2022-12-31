@@ -2,6 +2,7 @@ import aiohttp
 from aiohttp import web, WSCloseCode
 import asyncio
 import asyncssh
+import base64
 from contextlib import suppress
 import sys
 
@@ -22,11 +23,12 @@ async def websocket_handler(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
 
+    key = base64.b64decode(await ws.receive_str())
+
     last_user_id += 1
     options = asyncssh.SSHClientConnectionOptions(
-        preferred_auth=["keyboard-interactive", "none"],
-        public_key_auth=False,
-        kbdint_auth=True
+        client_keys=[asyncssh.import_private_key(key)],
+        agent_path=""
     )
     async with asyncssh.connect("habra.chat", username=f"Web{last_user_id}", password="", options=options) as conn:
         async with conn.create_process("", encoding=None) as process:
