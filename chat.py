@@ -3,6 +3,7 @@ from aiohttp import web, WSCloseCode
 import asyncio
 import asyncssh
 from contextlib import suppress
+import sys
 
 
 TIMEOUT = 120
@@ -68,7 +69,7 @@ async def websocket_handler(request):
     return ws
 
 
-def create_app():
+def create_app(argv):
     app = web.Application()
     app.add_routes([
         web.get("/", http_handler),
@@ -78,4 +79,4 @@ def create_app():
 
 
 if __name__ == "__main__":
-    web.run_app(create_app())
+    web.run_app(create_app(sys.argv[1:]))
