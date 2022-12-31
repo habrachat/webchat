@@ -20,6 +20,10 @@
 		<script type="text/javascript" src="https://unpkg.com/xterm-addon-fit@0.7.0"></script>
 		<script type="text/javascript" src="https://unpkg.com/xterm-addon-canvas@0.3.0"></script>
 		<script type="text/javascript">
+			if(location.protocol === "http:") {
+				location.reload(location.path.replace("http", "https"));
+			}
+
 			const enc = new TextEncoder();
 
 			const term = new Terminal();
