@@ -26,6 +26,7 @@
 
 			function start() {
 				const enc = new TextEncoder();
+				const dec = new TextDecoder();
 
 				const term = new Terminal();
 				const fitAddon = new FitAddon.FitAddon();
@@ -42,11 +43,21 @@
 				function connect() {
 					ws = new WebSocket(`${location.protocol.replace("http", "ws")}//${location.host}/chat/ws`);
 					ws.onopen = () => {
-						ws.send(localStorage.privateKey);
+						ws.send(`${localStorage.privateKey},${btoa(localStorage.nick)}`);
 						term.clear();
 					};
 					ws.onmessage = async e => {
-						term.write(new Uint8Array(await e.data.arrayBuffer()));
+						const arr = new Uint8Array(await e.data.arrayBuffer());
+						term.write(arr);
+
+						const idx = arr.lastIndexOf(0x0a);
+						if(idx !== -1 && arr[idx + 1] === 0x5b) {
+							const closeIdx = arr.indexOf(0x5d, idx);
+							let nick = dec.decode(arr.slice(idx + 2, closeIdx));
+							nick = nick.replace(/\x1b\[.*?m/g, "");
+							nick = nick.split(" ").slice(-1)[0];
+							localStorage.nick = nick;
+						}
 					};
 					ws.onclose = () => {
 						ws = null;
@@ -88,6 +99,10 @@
 					);
 					const pkcs8 = await crypto.subtle.exportKey("pkcs8", key.privateKey);
 					localStorage.privateKey = btoa(String.fromCharCode(...new Uint8Array(pkcs8)));
+				}
+
+				if(!localStorage.nick) {
+					localStorage.nick = "";
 				}
 
 				start();

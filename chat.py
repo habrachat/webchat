@@ -23,14 +23,20 @@ async def websocket_handler(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
 
-    key = base64.b64decode(await ws.receive_str())
+    info = await ws.receive_str()
+    key, nick = map(base64.b64decode, info.split(",", 1))
 
     last_user_id += 1
     options = asyncssh.SSHClientConnectionOptions(
         client_keys=[asyncssh.import_private_key(key)],
         agent_path=""
     )
-    async with asyncssh.connect("habra.chat", username=f"Web{last_user_id}", password="", options=options) as conn:
+    async with asyncssh.connect(
+        "habra.chat",
+        username=nick.decode() or f"Web{last_user_id}",
+        password="",
+        options=options
+    ) as conn:
         async with conn.create_process("", encoding=None) as process:
             async def ssh_to_ws():
                 while True:
