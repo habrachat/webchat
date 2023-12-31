@@ -44,6 +44,7 @@
 					ws = new WebSocket(`${location.protocol.replace("http", "ws")}//${location.host}/chat/ws`);
 					ws.onopen = () => {
 						ws.send(`${localStorage.privateKey},${btoa(localStorage.nick)}`);
+						ws.send(`resize ${term.cols} ${term.rows}`);
 						term.clear();
 					};
 					ws.onmessage = async e => {
@@ -75,6 +76,12 @@
 				term.onBinary(data => {
 					if(ws) {
 						ws.send(data);
+					}
+				});
+
+				term.onResize(({cols, rows}) => {
+					if(ws) {
+						ws.send(`resize ${cols} ${rows}`);
 					}
 				});
 

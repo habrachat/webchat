@@ -56,6 +56,14 @@ async def websocket_handler(request):
                 async for msg in ws:
                     if msg.type == aiohttp.WSMsgType.BINARY:
                         process.stdin.write(msg.data)
+                    elif msg.type == aiohttp.WSMsgType.TEXT and msg.data.strip():
+                        cmd, *args = msg.data.split()
+                        if cmd == "resize" and len(args) == 2:
+                            cols, rows = args
+                            if 0 < len(cols) < 10 and 0 < len(rows) < 10 and cols.isdigit() and rows.isdigit():
+                                cols = int(cols)
+                                rows = int(rows)
+                                process.change_terminal_size(cols, rows)
                     abort_task.cancel()
                     abort_task = asyncio.create_task(abort())
                 abort_task.cancel()
