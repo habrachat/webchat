@@ -18,10 +18,24 @@
 		<script type="text/javascript" src="https://unpkg.com/xterm@5.1.0/lib/xterm.js"></script>
 		<script type="text/javascript" src="https://unpkg.com/xterm-addon-web-links@0.8.0"></script>
 		<script type="text/javascript" src="https://unpkg.com/xterm-addon-fit@0.7.0"></script>
+		<script type="text/javascript" src="https://unpkg.com/xterm-addon-webgl@0.16.0"></script>
 		<script type="text/javascript" src="https://unpkg.com/xterm-addon-canvas@0.3.0"></script>
 		<script type="text/javascript">
 			if(location.protocol === "http:") {
 				location.assign(location.href.replace("http", "https"));
+			}
+
+			function isCanvasReadbackEnabled() {
+				const canvas = new OffscreenCanvas(1, 1);
+				const context = canvas.getContext("2d");
+				context.fillStyle = "#123456";
+				context.fillRect(0, 0, 1, 1);
+				const imageData = context.getImageData(0, 0, 1, 1);
+				return (
+					imageData.data[0] === 0x12
+					&& imageData.data[1] === 0x34
+					&& imageData.data[2] === 0x56
+				);
 			}
 
 			function start() {
@@ -32,9 +46,20 @@
 				const fitAddon = new FitAddon.FitAddon();
 				term.loadAddon(new WebLinksAddon.WebLinksAddon());
 				term.loadAddon(fitAddon);
-				term.loadAddon(new CanvasAddon.CanvasAddon());
 				term.open(document.querySelector(".terminal"));
 				fitAddon.fit();
+				if(isCanvasReadbackEnabled()) {
+					try {
+						const webglAddon = new WebglAddon.WebglAddon();
+						term.loadAddon(webglAddon);
+						webglAddon.onContextLoss(e => {
+							webglAddon.dispose();
+							term.loadAddon(new CanvasAddon.CanvasAddon());
+						});
+					} catch(e) {
+						term.loadAddon(new CanvasAddon.CanvasAddon());
+					}
+				}
 
 				window.onresize = () => fitAddon.fit();
 
