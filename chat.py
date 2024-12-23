@@ -85,7 +85,7 @@ async def websocket_handler(request):
     return ws
 
 
-def create_app(argv):
+def create_app():
     app = web.Application()
     app.add_routes([
         web.get("/chat", http_handler),
@@ -96,4 +96,4 @@ def create_app(argv):
 
 
 if __name__ == "__main__":
-    web.run_app(create_app(sys.argv[1:]))
+    web.run_app(create_app(), port=2023)
